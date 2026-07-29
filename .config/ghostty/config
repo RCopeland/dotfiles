@@ -1,0 +1,7 @@
+initial-window = false
+keybind = global:cmd+grave_accent=toggle_quick_terminal
+quick-terminal-position = bottom
+quick-terminal-size = 60%,60%
+font-size = 15
+window-padding-x = 24
+window-padding-y = 24

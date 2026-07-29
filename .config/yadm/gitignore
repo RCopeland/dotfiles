@@ -1,0 +1,59 @@
+# ==============================================================================
+# 1. DEFAULT GLOBAL IGNORE (Prevent yadm from scanning your entire $HOME)
+# ==============================================================================
+*
+
+# Allow yadm config directory itself
+!.config/
+!.config/yadm/
+!.config/yadm/*
+
+# ==============================================================================
+# 2. HERDR AGENT MULTIPLEXER CONFIGURATION
+# ==============================================================================
+# Allow tracking the main config directory structural layout
+!.config/herdr/
+
+# TRACK: Static configs, tool maps, and layouts
+!.config/herdr/*.toml
+!.config/herdr/*.yaml
+!.config/herdr/*.json
+
+# HARD EXCLUDE: Dynamic state, active loops, and tokens
+.config/herdr/session.json
+.config/herdr/session-history.json
+.config/herdr/logs/
+.config/herdr/sockets/
+**/herdr/session*.json
+
+# ==============================================================================
+# 3. PI CODING AGENT CONFIGURATION
+# ==============================================================================
+# Allow tracking the main directory structure
+!.pi/
+!.pi/agent/
+!.pi/agent/*/
+
+# TRACK: Global behaviors, instructions, and settings
+!.pi/.gitignore
+!.pi/agent/AGENTS.md
+!.pi/agent/CLAUDE.md
+!.pi/agent/APPEND_SYSTEM.md
+!.pi/agent/settings.json
+!.pi/agent/models.json
+
+# TRACK: Custom extensions and developer scripts
+!.pi/agent/extensions/**
+!.pi/agent/skills/**
+!.pi/agent/prompts/**
+!.pi/agent/themes/**
+
+# HARD EXCLUDE: Volatile states, packages, and local keys
+.pi/agent/auth.json
+.pi/agent/sessions/
+.pi/agent/logs/
+.pi/agent/npm/
+.pi/agent/cache/
+.pi/agent/mcp-cache.json
+**/agent/sessions/**
+

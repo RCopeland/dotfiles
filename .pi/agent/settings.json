@@ -1,0 +1,13 @@
+{
+  "lastChangelogVersion": "0.83.0",
+  "defaultProvider": "opencode",
+  "defaultModel": "big-pickle",
+  "defaultThinkingLevel": "medium",
+  "hideThinkingBlock": true,
+  "theme": "dark",
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-markdown-preview",
+    "npm:pi-web-access"
+  ]
+}

@@ -1,0 +1,32 @@
+# Ignore all files by default
+*
+
+# Allow tracking of specific folders and core structures
+!*/
+!.gitignore
+
+# --- TRACK THESE ---
+# Global prompts, guidelines, and tool configs
+!agent/AGENTS.md
+!agent/CLAUDE.md
+!agent/APPEND_SYSTEM.md
+!agent/settings.json
+!agent/models.json
+
+# Custom extensions, skills, and styles
+!agent/extensions/**
+!agent/skills/**
+!agent/prompts/**
+!agent/themes/**
+
+# --- EXCLUDE THESE (Explicit Safety Overrides) ---
+# Secrets and active session histories
+agent/auth.json
+agent/sessions/**
+agent/logs/**
+
+# Node dependencies and internal runtime caches
+agent/npm/**
+agent/cache/**
+agent/mcp-cache.json
+

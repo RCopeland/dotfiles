@@ -1,0 +1,31 @@
+{
+  "lastChangelogVersion": "0.84.1",
+  "enabledModels": [
+    "openai-codex/gpt-5.4",
+    "github-copilot/gpt-5.4"
+  ],
+  "defaultProvider": "github-copilot",
+  "defaultModel": "gpt-5.4",
+  "hideThinkingBlock": false,
+  "theme": "dark",
+  "packages": [
+    "npm:pi-web-access",
+    "npm:pi-goal",
+    {
+      "source": "npm:pi-sticky-input",
+      "extensions": [
+        "-index.ts"
+      ]
+    },
+    {
+      "source": "git:github.com/omerxx/pi-head",
+      "extensions": [
+        "-extensions/head.ts"
+      ]
+    },
+    "npm:pi-mcp-adapter",
+    "git:github.com/aporcelli/pi-usage",
+    "npm:pi-herdr-subagents"
+  ],
+  "httpIdleTimeoutMs": 120000
+}

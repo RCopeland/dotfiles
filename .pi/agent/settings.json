@@ -1,11 +1,12 @@
 {
-  "lastChangelogVersion": "0.83.0",
-  "defaultProvider": "opencode",
-  "defaultModel": "big-pickle",
-  "defaultThinkingLevel": "medium",
-  "hideThinkingBlock": true,
+  "lastChangelogVersion": "0.84.2",
   "theme": "dark",
+  "defaultProvider": "bansos",
+  "defaultModel": "big-pickle",
+  "defaultThinkingLevel": "high",
+  "hideThinkingBlock": true,
   "packages": [
+    "npm:pi-bansos",
     "npm:pi-mcp-adapter",
     "npm:pi-markdown-preview",
     "npm:pi-web-access"

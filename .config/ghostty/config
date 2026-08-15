@@ -1,7 +1,8 @@
+
+keybind = global:alt+grave_accent=toggle_quick_terminal
 initial-window = false
-keybind = global:cmd+grave_accent=toggle_quick_terminal
 quick-terminal-position = bottom
-quick-terminal-size = 60%,60%
-font-size = 15
+quick-terminal-size = 100%,100%
+font-size = 14 
 window-padding-x = 24
 window-padding-y = 24

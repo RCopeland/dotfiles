@@ -57,3 +57,11 @@
 .pi/agent/mcp-cache.json
 **/agent/sessions/**
 
+# ==============================================================================
+# 4. ALACRITTY TERMINAL + SHELL
+# ==============================================================================
+# Allow tracking terminal and shell configs
+!.zshrc
+!.config/alacritty/
+!.config/alacritty/*
+

@@ -65,3 +65,23 @@
 !.config/alacritty/
 !.config/alacritty/*
 
+# Local (trimmed) copy of the CachyOS zsh config, sourced from .zshrc
+!.config/zsh/
+!.config/zsh/*
+
+# ==============================================================================
+# 5. YADM BOOTSTRAP (packages, KDE snippets)
+# ==============================================================================
+# .config/yadm/* already unignored above; allow the nested kde/ tree
+!.config/yadm/kde/
+!.config/yadm/kde/**
+
+# ==============================================================================
+# 6. KWIN SCRIPTS (user-local, restored by yadm so bootstrap can enable them)
+# ==============================================================================
+!.local/
+!.local/share/
+!.local/share/kwin/
+!.local/share/kwin/scripts/
+!.local/share/kwin/scripts/**
+

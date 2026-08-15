@@ -1,0 +1,6 @@
+# =============================================================================
+# yadm bootstrap — AUR packages (installed via yay/paru)
+# One package per line; '#' starts a comment.
+# =============================================================================
+google-chrome
+dbus-app-launcher

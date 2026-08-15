@@ -1,0 +1,104 @@
+# =============================================================================
+# yadm bootstrap — pacman (repo) packages
+# One package per line; '#' starts a comment.
+# CachyOS base packages (linux-cachyos, plasma-desktop, cachyos-*, snapper,
+# btrfs-assistant, nvidia/intel drivers, ...) ship with the ISO and are NOT
+# listed here on purpose.
+# =============================================================================
+
+# --- shell & terminal ---
+alacritty
+zsh
+starship
+cachyos-zsh-config
+bash-completion
+ttf-meslo-nerd
+
+# --- development ---
+base-devel
+git
+ripgrep
+lazygit
+neovim
+micro
+vim
+nodejs
+npm
+python
+man-db
+man-pages
+pkgfile
+
+# --- system tools ---
+yadm
+yay
+openssh
+curl
+wget
+rsync
+unzip
+unrar
+btop
+fastfetch
+duf
+pv
+glances
+ufw
+tailscale
+
+# --- GUI apps ---
+ark
+dolphin
+firefox
+gwenview
+haruna
+kate
+kcalc
+kdeconnect
+konsole
+meld
+pavucontrol
+plasma-systemmonitor
+spectacle
+filelight
+partitionmanager
+kio-admin
+
+# --- KDE / Plasma integration ---
+kdeplasma-addons
+plasma-browser-integration
+kde-gtk-config
+kscreen
+kwalletmanager
+kinfocenter
+kconfig            # kwriteconfig6 (used by the KDE bootstrap phase)
+qt6-tools          # qdbus6 (used by the KDE bootstrap phase)
+xsettingsd
+power-profiles-daemon
+
+# --- fonts ---
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+cantarell-fonts
+ttf-dejavu
+ttf-liberation
+ttf-opensans
+awesome-terminal-fonts
+ttf-bitstream-vera
+
+# --- media & codecs ---
+ffmpegthumbnailer
+ffmpegthumbs
+gst-libav
+gst-plugin-pipewire
+gst-plugins-bad
+gst-plugins-ugly
+gst-plugin-va
+phonon-qt6-vlc
+vlc-plugins-all
+libdvdcss
+poppler-glib
+
+# NOTE: ghostty is intentionally NOT here — this setup moved to alacritty.
+# NOTE: GPU drivers / lib32 packages are machine-specific; add them per host.

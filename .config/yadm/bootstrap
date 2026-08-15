@@ -1,0 +1,248 @@
+#!/usr/bin/env bash
+# =============================================================================
+# yadm bootstrap — CachyOS / KDE Plasma 6 workstation
+#
+# Runs automatically after `yadm clone` (yadm.auto-bootstrap), or manually:
+#     yadm bootstrap
+# Safe to re-run: every step is idempotent. Skip phases with flags:
+#     yadm bootstrap --no-packages --no-tools --no-kde
+#
+# Phases
+#   packages  pacman (repo) + AUR packages, from .config/yadm/packages{,-aur}
+#   tools     user-local binaries: herdr, neovim (tarball), pi (npm global)
+#   kde       kwin "Toggle Terminal" script config + global shortcuts,
+#             merged into ~/.config via kwriteconfig6 from
+#             .config/yadm/kde/kwinrc.d/ and .../kglobalshortcutsrc.d/
+# =============================================================================
+set -euo pipefail
+
+# ---------------------------------------------------------------- options
+YADM_DIR="$HOME/.config/yadm"
+PKGS_REPO="$YADM_DIR/packages"
+PKGS_AUR="$YADM_DIR/packages-aur"
+CACHYOS_ZSH_SRC=/usr/share/cachyos-zsh-config/cachyos-config.zsh
+
+DO_PACKAGES=1
+DO_TOOLS=1
+DO_KDE=1
+
+log()  { printf '\033[1;36m[bootstrap]\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33m[bootstrap]\033[0m %s\n' "$*"; }
+die()  { printf '\033[1;31m[bootstrap]\033[0m %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-packages) DO_PACKAGES=0 ;;
+    --no-tools)    DO_TOOLS=0 ;;
+    --no-kde)      DO_KDE=0 ;;
+    -h|--help)     usage ;;
+    *)             die "unknown option: $arg (try --help)" ;;
+  esac
+done
+
+# ---------------------------------------------------------------- preflight
+preflight() {
+  cd "$HOME"
+  command -v pacman >/dev/null 2>&1 || die "pacman not found — this bootstrap targets CachyOS/Arch"
+  command -v yadm   >/dev/null 2>&1 || die "yadm not found"
+  yadm rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not run inside a yadm checkout"
+  if ! grep -qiE 'cachyos|arch' /etc/os-release 2>/dev/null; then
+    warn "OS does not look like CachyOS/Arch — continuing anyway"
+  fi
+  sudo -v || die "sudo required"
+  log "Preflight OK ($(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"'))"
+}
+
+# ---------------------------------------------------------------- packages
+read_pkg_list() {
+  local file="$1"
+  local -n out="$2"
+  [[ -f "$file" ]] || return 0
+  while IFS= read -r line; do
+    line="${line%%#*}"                        # strip comments
+    line="$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+    [[ -n "$line" ]] && out+=("$line")
+  done < "$file"
+}
+
+ensure_aur_helper() {
+  if [[ -n "${AUR_HELPER:-}" ]]; then return; fi
+  if command -v yay  >/dev/null 2>&1; then AUR_HELPER=yay;  return; fi
+  if command -v paru >/dev/null 2>&1; then AUR_HELPER=paru; return; fi
+  # Fresh CachyOS ships paru; fall back to building yay if neither exists.
+  log "No AUR helper found — building yay-bin from the AUR"
+  sudo pacman -S --needed --noconfirm base-devel git
+  local tmp
+  tmp="$(mktemp -d)"
+  git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$tmp/yay-bin"
+  ( cd "$tmp/yay-bin" && makepkg -si --noconfirm )
+  rm -rf "$tmp"
+  AUR_HELPER=yay
+}
+
+install_packages() {
+  local -a repo=() aur=()
+  read_pkg_list "$PKGS_REPO" repo
+  read_pkg_list "$PKGS_AUR"  aur
+
+  if (( ${#repo[@]} )); then
+    log "Installing ${#repo[@]} repo packages via pacman"
+    sudo pacman -S --needed --noconfirm "${repo[@]}"
+  fi
+
+  if (( ${#aur[@]} )); then
+    ensure_aur_helper
+    log "Installing ${#aur[@]} AUR packages via $AUR_HELPER"
+    "$AUR_HELPER" -S --needed --noconfirm "${aur[@]}"
+  fi
+}
+
+# ---------------------------------------------------------------- tools
+install_herdr() {
+  if command -v herdr >/dev/null 2>&1; then
+    log "herdr already installed: $(herdr --version 2>/dev/null | head -1)"
+    return
+  fi
+  log "Installing herdr (official installer → ~/.local/bin)"
+  curl -fsSL https://herdr.dev/install.sh | sh
+}
+
+install_neovim_tarball() {
+  local nvim_bin="$HOME/.local/opt/nvim-linux-x86_64/bin/nvim"
+  if [[ -x "$nvim_bin" ]]; then
+    log "neovim user-local tarball already present"
+    return
+  fi
+  log "Downloading latest neovim release (user-local tarball, matches this setup)"
+  local url
+  url="$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest \
+           | grep -oE '"browser_download_url": *"[^"]+nvim-linux-x86_64\.tar\.gz"' \
+           | head -1 | cut -d '"' -f4)"
+  [[ -n "$url" ]] || die "could not resolve neovim download URL"
+  mkdir -p "$HOME/.local/opt" "$HOME/.local/bin"
+  curl -fL "$url" -o /tmp/nvim-linux-x86_64.tar.gz
+  tar -xzf /tmp/nvim-linux-x86_64.tar.gz -C "$HOME/.local/opt"
+  rm -f /tmp/nvim-linux-x86_64.tar.gz
+  ln -sfn "$HOME/.local/opt/nvim-linux-x86_64/bin/nvim" "$HOME/.local/bin/nvim"
+  log "neovim installed: $HOME/.local/bin/nvim"
+}
+
+install_pi() {
+  if command -v pi >/dev/null 2>&1; then
+    log "pi already installed: $(readlink -f "$(command -v pi)")"
+    return
+  fi
+  log "Installing pi coding agent via npm (global prefix ~/.local)"
+  if [[ "$(npm config get prefix)" != "$HOME/.local" ]]; then
+    npm config set prefix "$HOME/.local"
+  fi
+  npm install -g @earendil-works/pi-coding-agent
+  warn "Run 'pi' once after bootstrap to finish first-run setup"
+}
+
+# ---------------------------------------------------------------- KDE
+apply_kde_snippets() {
+  command -v kwriteconfig6 >/dev/null 2>&1 \
+    || { warn "kwriteconfig6 not found (kconfig not installed yet?)"; return; }
+
+  local dir cfg group line key value snippet
+  for dir in "$YADM_DIR/kde/kwinrc.d" "$YADM_DIR/kde/kglobalshortcutsrc.d"; do
+    case "$dir" in
+      *kwinrc.d)            cfg=kwinrc ;;
+      *kglobalshortcutsrc*) cfg=kglobalshortcutsrc ;;
+    esac
+    [[ -d "$dir" ]] || continue
+    for snippet in "$dir"/*.conf; do
+      [[ -f "$snippet" ]] || continue
+      log "Applying $(basename "$snippet") → ~/.config/$cfg"
+      group=""
+      while IFS= read -r line; do
+        line="$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+        [[ -z "$line" || "$line" == \#* || "$line" == \;* ]] && continue
+        if [[ "$line" == \[*\] ]]; then
+          group="${line:1:${#line}-2}"
+        elif [[ "$line" == *=* && -n "$group" ]]; then
+          key="${line%%=*}"
+          value="${line#*=}"
+          kwriteconfig6 --file "$cfg" --group "$group" --key "$key" "$value"
+        else
+          warn "skipping unparsed line in $snippet: $line"
+        fi
+      done < "$snippet"
+    done
+  done
+}
+
+reload_kde() {
+  if ! qdbus6 org.kde.KWin >/dev/null 2>&1; then
+    log "Not inside a live Plasma session — KDE settings apply on next login"
+    return
+  fi
+  log "Reloading KWin configuration"
+  qdbus6 org.kde.KWin /KWin org.kde.KWin.reconfigure >/dev/null 2>&1 || true
+
+  local main_js="$HOME/.local/share/kwin/scripts/toggleterminal/contents/code/main.js"
+  if [[ -f "$main_js" ]]; then
+    local loaded
+    loaded="$(qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.isScriptLoaded \
+              toggleterminal 2>/dev/null || echo false)"
+    if [[ "$loaded" != "true" ]]; then
+      qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript \
+        "$main_js" toggleterminal >/dev/null 2>&1 || true
+      qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.start >/dev/null 2>&1 || true
+      log "Loaded 'toggleterminal' kwin script at runtime"
+    else
+      log "kwin script 'toggleterminal' already loaded"
+    fi
+  fi
+  warn "Global shortcuts written to kglobalshortcutsrc, but kglobalaccel has no live"
+  warn "reload — log out/in (or restart Plasma) to activate them."
+}
+
+# ---------------------------------------------------------------- shell
+ensure_zsh_config() {
+  local dst="$HOME/.config/zsh/cachyos-config.zsh"
+  if [[ -f "$dst" ]]; then
+    log "zsh local config present: $dst"
+    return
+  fi
+  if [[ -f "$CACHYOS_ZSH_SRC" ]]; then
+    log "Copying $CACHYOS_ZSH_SRC → $dst"
+    mkdir -p "$HOME/.config/zsh"
+    cp "$CACHYOS_ZSH_SRC" "$dst"
+  else
+    warn "cachyos-zsh-config not installed and no local copy present"
+  fi
+}
+
+# ---------------------------------------------------------------- main
+preflight
+
+if (( DO_PACKAGES )); then
+  install_packages
+fi
+if (( DO_TOOLS )); then
+  install_herdr
+  install_neovim_tarball
+  install_pi
+fi
+if (( DO_KDE )); then
+  apply_kde_snippets
+  reload_kde
+fi
+
+ensure_zsh_config
+
+log "Refreshing yadm alternative files and permissions"
+yadm alt >/dev/null 2>&1 || true
+yadm perms >/dev/null 2>&1 || true
+
+log "Done. Notes:"
+log "  • herdr: keep it current with 'herdr update'"
+log "  • pi:    first run finishes its setup (runtime deps are not tracked)"
+log "  • If global shortcuts do not work after login, re-run: yadm bootstrap --no-packages --no-tools"

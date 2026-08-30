@@ -1,0 +1,279 @@
+#!/usr/bin/env bash
+# =============================================================================
+# yadm bootstrap — cross-platform workstation setup
+#
+# Runs automatically after `yadm clone` (if enabled), or manually:
+#     yadm bootstrap
+# Safe to re-run. Supported phases:
+#   packages  Linux: pacman + AUR, macOS: Homebrew bundle
+#   tools     shared installs plus Linux-specific helpers
+#   kde       Linux/KDE-only config overlay application
+#
+# Skip phases with:
+#     yadm bootstrap --no-packages --no-tools --no-kde
+# =============================================================================
+set -euo pipefail
+
+YADM_DIR="$HOME/.config/yadm"
+PKGS_REPO="$YADM_DIR/packages"
+PKGS_AUR="$YADM_DIR/packages-aur"
+BREWFILE="$YADM_DIR/Brewfile"
+CACHYOS_ZSH_SRC=/usr/share/cachyos-zsh-config/cachyos-config.zsh
+
+DO_PACKAGES=1
+DO_TOOLS=1
+DO_KDE=1
+OS="$(uname -s)"
+AUR_HELPER="${AUR_HELPER:-}"
+
+log()  { printf '\033[1;36m[bootstrap]\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33m[bootstrap]\033[0m %s\n' "$*"; }
+die()  { printf '\033[1;31m[bootstrap]\033[0m %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-packages) DO_PACKAGES=0 ;;
+    --no-tools)    DO_TOOLS=0 ;;
+    --no-kde)      DO_KDE=0 ;;
+    -h|--help)     usage ;;
+    *)             die "unknown option: $arg (try --help)" ;;
+  esac
+done
+
+preflight() {
+  cd "$HOME"
+  command -v yadm >/dev/null 2>&1 || die "yadm not found"
+  yadm rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not run inside a yadm checkout"
+  log "Preflight OK ($OS)"
+}
+
+append_pkg_list() {
+  local file="$1"
+  local array_name="$2"
+  local line
+  [[ -f "$file" ]] || return 0
+  while IFS= read -r line; do
+    line="${line%%#*}"
+    line="$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+    if [[ -n "$line" ]]; then
+      eval "$array_name+=(\"\$line\")"
+    fi
+  done < "$file"
+}
+
+ensure_aur_helper() {
+  if [[ -n "$AUR_HELPER" ]]; then return; fi
+  if command -v yay >/dev/null 2>&1; then AUR_HELPER=yay; return; fi
+  if command -v paru >/dev/null 2>&1; then AUR_HELPER=paru; return; fi
+  log "No AUR helper found — building yay-bin from the AUR"
+  sudo pacman -S --needed --noconfirm base-devel git
+  local tmp
+  tmp="$(mktemp -d)"
+  git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$tmp/yay-bin"
+  ( cd "$tmp/yay-bin" && makepkg -si --noconfirm )
+  rm -rf "$tmp"
+  AUR_HELPER=yay
+}
+
+install_linux_packages() {
+  command -v pacman >/dev/null 2>&1 || die "pacman not found — Linux package phase expects Arch/CachyOS"
+  sudo -v || die "sudo required for pacman installs"
+
+  local repo=()
+  local aur=()
+  append_pkg_list "$PKGS_REPO" repo
+  append_pkg_list "$PKGS_AUR" aur
+
+  if (( ${#repo[@]} )); then
+    log "Installing ${#repo[@]} repo packages via pacman"
+    sudo pacman -S --needed --noconfirm "${repo[@]}"
+  fi
+
+  if (( ${#aur[@]} )); then
+    ensure_aur_helper
+    log "Installing ${#aur[@]} AUR packages via $AUR_HELPER"
+    "$AUR_HELPER" -S --needed --noconfirm "${aur[@]}"
+  fi
+}
+
+ensure_homebrew() {
+  if command -v brew >/dev/null 2>&1; then
+    return
+  fi
+
+  log "Installing Homebrew"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+
+  command -v brew >/dev/null 2>&1 || die "Homebrew install completed but brew is not on PATH"
+}
+
+install_macos_packages() {
+  [[ -f "$BREWFILE" ]] || die "Brewfile not found: $BREWFILE"
+  ensure_homebrew
+  log "Installing macOS packages via brew bundle"
+  brew bundle --file "$BREWFILE"
+}
+
+install_herdr() {
+  if command -v herdr >/dev/null 2>&1; then
+    log "herdr already installed"
+    return
+  fi
+  log "Installing herdr (official installer → ~/.local/bin)"
+  curl -fsSL https://herdr.dev/install.sh | sh
+}
+
+install_pi() {
+  if command -v pi >/dev/null 2>&1; then
+    log "pi already installed"
+    return
+  fi
+  command -v npm >/dev/null 2>&1 || die "npm is required to install pi; run the packages phase first"
+  log "Installing pi coding agent via npm (global prefix ~/.local)"
+  if [[ "$(npm config get prefix)" != "$HOME/.local" ]]; then
+    npm config set prefix "$HOME/.local"
+  fi
+  npm install -g @earendil-works/pi-coding-agent
+}
+
+install_linux_neovim_tarball() {
+  local nvim_bin="$HOME/.local/opt/nvim-linux-x86_64/bin/nvim"
+  if [[ -x "$nvim_bin" ]]; then
+    log "neovim user-local tarball already present"
+    return
+  fi
+  log "Downloading latest neovim release (user-local Linux tarball)"
+  local url
+  url="$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest | grep -oE '"browser_download_url": *"[^"]+nvim-linux-x86_64\.tar\.gz"' | head -1 | cut -d '"' -f4)"
+  [[ -n "$url" ]] || die "could not resolve neovim download URL"
+  mkdir -p "$HOME/.local/opt" "$HOME/.local/bin"
+  curl -fL "$url" -o /tmp/nvim-linux-x86_64.tar.gz
+  tar -xzf /tmp/nvim-linux-x86_64.tar.gz -C "$HOME/.local/opt"
+  rm -f /tmp/nvim-linux-x86_64.tar.gz
+  ln -sfn "$HOME/.local/opt/nvim-linux-x86_64/bin/nvim" "$HOME/.local/bin/nvim"
+  log "neovim installed: $HOME/.local/bin/nvim"
+}
+
+ensure_zsh_config() {
+  local dst="$HOME/.config/zsh/cachyos-config.zsh"
+  if [[ -f "$dst" ]]; then
+    log "zsh local config present: $dst"
+    return
+  fi
+  if [[ "$OS" == "Linux" && -f "$CACHYOS_ZSH_SRC" ]]; then
+    log "Copying $CACHYOS_ZSH_SRC → $dst"
+    mkdir -p "$HOME/.config/zsh"
+    cp "$CACHYOS_ZSH_SRC" "$dst"
+  else
+    warn "Skipping CachyOS zsh config copy on $OS"
+  fi
+}
+
+apply_kde_snippets() {
+  command -v kwriteconfig6 >/dev/null 2>&1 || { warn "kwriteconfig6 not found"; return; }
+
+  local dir cfg group line key value snippet
+  for dir in "$YADM_DIR/kde/kwinrc.d" "$YADM_DIR/kde/kglobalshortcutsrc.d"; do
+    case "$dir" in
+      *kwinrc.d) cfg=kwinrc ;;
+      *kglobalshortcutsrc*) cfg=kglobalshortcutsrc ;;
+    esac
+    [[ -d "$dir" ]] || continue
+    for snippet in "$dir"/*.conf; do
+      [[ -f "$snippet" ]] || continue
+      log "Applying $(basename "$snippet") → ~/.config/$cfg"
+      group=""
+      while IFS= read -r line; do
+        line="$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+        [[ -z "$line" || "$line" == \#* || "$line" == \;* ]] && continue
+        if [[ "$line" == \[*\] ]]; then
+          group="${line:1:${#line}-2}"
+        elif [[ "$line" == *=* && -n "$group" ]]; then
+          key="${line%%=*}"
+          value="${line#*=}"
+          kwriteconfig6 --file "$cfg" --group "$group" --key "$key" "$value"
+        else
+          warn "skipping unparsed line in $snippet: $line"
+        fi
+      done < "$snippet"
+    done
+  done
+}
+
+reload_kde() {
+  command -v qdbus6 >/dev/null 2>&1 || return 0
+  if ! qdbus6 org.kde.KWin >/dev/null 2>&1; then
+    log "Not inside a live Plasma session — KDE settings apply on next login"
+    return
+  fi
+  log "Reloading KWin configuration"
+  qdbus6 org.kde.KWin /KWin org.kde.KWin.reconfigure >/dev/null 2>&1 || true
+
+  local main_js="$HOME/.local/share/kwin/scripts/toggleterminal/contents/code/main.js"
+  if [[ -f "$main_js" ]]; then
+    local loaded
+    loaded="$(qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.isScriptLoaded toggleterminal 2>/dev/null || echo false)"
+    if [[ "$loaded" != "true" ]]; then
+      qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "$main_js" toggleterminal >/dev/null 2>&1 || true
+      qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.start >/dev/null 2>&1 || true
+    fi
+  fi
+}
+
+install_tools() {
+  case "$OS" in
+    Linux)
+      install_herdr
+      install_linux_neovim_tarball
+      install_pi
+      ;;
+    Darwin)
+      install_pi
+      ;;
+    *)
+      warn "Unsupported OS for tools phase: $OS"
+      ;;
+  esac
+
+  ensure_zsh_config
+}
+
+preflight
+
+if (( DO_PACKAGES )); then
+  case "$OS" in
+    Linux)  install_linux_packages ;;
+    Darwin) install_macos_packages ;;
+    *)      warn "Skipping packages phase on unsupported OS: $OS" ;;
+  esac
+fi
+
+if (( DO_TOOLS )); then
+  install_tools
+fi
+
+if (( DO_KDE )); then
+  if [[ "$OS" == "Linux" ]]; then
+    apply_kde_snippets
+    reload_kde
+  else
+    log "Skipping KDE phase on $OS"
+  fi
+fi
+
+log "Refreshing yadm alternative files and permissions"
+yadm alt >/dev/null 2>&1 || true
+yadm perms >/dev/null 2>&1 || true
+
+log "Done. Review ~/.config/yadm/Brewfile or package lists to fit each machine."

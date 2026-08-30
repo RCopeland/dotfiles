@@ -1,0 +1,67 @@
+# Starship prompt config
+# https://starship.rs/config/
+
+# Global
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$rust\
+$package\
+$cmd_duration\
+$line_break\
+$character"""
+
+add_newline = true
+
+[character]
+success_symbol = "[❯](bold #a6e3a1)"
+error_symbol = "[❯](bold #f38ba8)"
+vimcmd_symbol = "[❮](bold #89b4fa)"
+
+[username]
+show_always = true
+style_user = "bold #89b4fa"
+style_root = "bold #f38ba8"
+format = "[$user]($style) "
+
+[hostname]
+ssh_only = true
+format = "[$hostname](bold #f5c2e7) "
+style = "bold #f5c2e7"
+
+[directory]
+style = "bold #94e2d5"
+read_only = " 󰌾"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = " "
+style = "bold #f9e2af"
+
+[git_status]
+style = "#a6adc8"
+
+[cmd_duration]
+min_time = 2000
+style = "#a6adc8"
+
+[python]
+symbol = " "
+
+[nodejs]
+symbol = " "
+
+[rust]
+symbol = " "
+
+[package]
+symbol = " "
+
+[line_break]
+disabled = false

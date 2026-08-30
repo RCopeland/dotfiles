@@ -1,0 +1,8 @@
+
+keybind = global:alt+grave_accent=toggle_quick_terminal
+initial-window = false
+quick-terminal-position = bottom
+quick-terminal-size = 100%,100%
+font-size = 14 
+window-padding-x = 24
+window-padding-y = 24

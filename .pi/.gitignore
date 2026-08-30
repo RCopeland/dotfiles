@@ -1,0 +1,26 @@
+# Ignore all files by default
+*
+
+# Allow tracking of specific folders and core structures
+!*/
+!.gitignore
+
+# --- TRACK THESE ---
+!agent/settings.json
+!agent/mcp.json
+!agent/extensions/**
+!agent/skills/**
+!agent/themes/**
+!agent/npm/.gitignore
+
+# --- EXCLUDE THESE ---
+agent/auth.json
+agent/sessions/**
+agent/logs/**
+agent/npm/**
+!agent/npm/.gitignore
+agent/git/**
+agent/cache/**
+agent/mcp-cache.json
+agent/mcp-npx-cache.json
+agent/models-store.json

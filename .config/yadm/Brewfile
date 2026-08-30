@@ -1,0 +1,17 @@
+# Homebrew packages for macOS bootstrap
+
+brew "bash"
+brew "coreutils"
+brew "curl"
+brew "fd"
+brew "fzf"
+brew "git"
+brew "lazygit"
+brew "neovim"
+brew "node"
+brew "ripgrep"
+brew "starship"
+brew "yadm"
+
+cask "ghostty"
+cask "iterm2"

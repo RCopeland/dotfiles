@@ -1,0 +1,26 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Id": "toggleterminal",
+        "Version": "2.1.1",
+        "Name": "Toggle Terminal",
+        "Description": "Toggles program visibility using a hotkey.",
+        "Category": "Windows and Tasks",
+        "Icon": "preferences-system-windows",
+        "Authors": [
+            {
+                "Email": "kde@dvdgiessen.nl",
+                "Name": "Daniël van de Giessen"
+            }
+        ],
+        "Website": "https://github.com/DvdGiessen/kwin-toggleterminal",
+        "License": "GPL-3.0",
+        "ServiceTypes": [
+            "KWin/Script",
+            "KCModule"
+        ]
+    },
+    "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js"
+}

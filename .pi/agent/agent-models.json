@@ -1,0 +1,26 @@
+{
+  "default": ["bansos/big-pickle", "bansos/nemotron-3-ultra-free"],
+  "thinking": {
+    "research": "low",
+    "researcher": "medium",
+    "scout": "off",
+    "architect": "high",
+    "plan": "high",
+    "dev": "low",
+    "tester": "low",
+    "review": "high",
+    "publish": "low"
+  },
+  "agents": {
+    "research": ["bansos/laguna-s-2.1-free", "bansos/north-mini-code:free", "bansos/big-pickle"],
+    "researcher": ["openai-codex/gpt-5.4", "github-copilot/gpt-5.4", "bansos/big-pickle"],
+    "scout": ["bansos/poolside/laguna-xs-2.1:free", "bansos/laguna-s-2.1-free"],
+    "architect": ["bansos/nemotron-3-ultra-free", "bansos/big-pickle", "bansos/laguna-s-2.1-free"],
+    "plan": ["bansos/nemotron-3-ultra-free", "bansos/big-pickle"],
+    "dev": ["bansos/laguna-s-2.1-free", "bansos/big-pickle"],
+    "tester": ["bansos/laguna-s-2.1-free", "bansos/big-pickle"],
+    "visual-tester": ["bansos/mimo-v2.5-free", "bansos/big-pickle"],
+    "review": ["bansos/nemotron-3-ultra-free", "bansos/big-pickle"],
+    "publish": ["bansos/laguna-s-2.1-free", "bansos/big-pickle"]
+  }
+}

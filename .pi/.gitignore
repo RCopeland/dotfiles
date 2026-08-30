@@ -12,6 +12,8 @@
 !agent/skills/**
 !agent/themes/**
 !agent/npm/.gitignore
+!agent/agents/**
+!agent/agent-models.json
 
 # --- EXCLUDE THESE ---
 agent/auth.json

@@ -3,7 +3,7 @@ working_directory = "None"
 live_config_reload = true
 
 [terminal.shell]
-program = "/home/rob/.local/bin/herdr"
+program = "herdr"
 
 [env]
 TERM = "xterm-256color"

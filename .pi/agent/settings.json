@@ -4,10 +4,11 @@
     "openai-codex/gpt-5.4",
     "github-copilot/gpt-5.4"
   ],
+  "theme": "catppuccin-mocha",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.4",
-  "hideThinkingBlock": false,
-  "theme": "dark",
+  "defaultThinkingLevel": "high",
+  "hideThinkingBlock": true,
   "packages": [
     "npm:pi-web-access",
     "npm:pi-goal",
@@ -25,7 +26,8 @@
     },
     "npm:pi-mcp-adapter",
     "git:github.com/aporcelli/pi-usage",
-    "npm:pi-herdr-subagents"
+    "npm:pi-herdr-subagents",
+    "npm:pi-bansos"
   ],
   "httpIdleTimeoutMs": 120000
 }

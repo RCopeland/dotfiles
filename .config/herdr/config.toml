@@ -2,4 +2,5 @@ onboarding = false
 
 [theme]
 # Catppuccin Mocha (alias for the built-in "catppuccin" dark theme)
-name = "catppuccin-mocha"
+name = "terminal"
+auto_switch = false

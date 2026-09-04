@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.3",
+  "lastChangelogVersion": "0.84.4",
   "enabledModels": [
     "openai-codex/gpt-5.4",
     "github-copilot/gpt-5.4"

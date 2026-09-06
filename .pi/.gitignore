@@ -14,6 +14,8 @@
 !agent/npm/.gitignore
 !agent/agents/**
 !agent/agent-models.json
+!agent/AGENTS.md
+!agent/
 
 # --- EXCLUDE THESE ---
 agent/auth.json

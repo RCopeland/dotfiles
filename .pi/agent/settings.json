@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.85.0",
+  "lastChangelogVersion": "0.86.1",
   "enabledModels": [
     "openai-codex/gpt-5.4",
     "github-copilot/gpt-5.4"
@@ -27,7 +27,8 @@
     "npm:pi-mcp-adapter",
     "git:github.com/aporcelli/pi-usage",
     "npm:pi-herdr-subagents",
-    "npm:pi-bansos"
+    "npm:pi-bansos",
+    "npm:pi-9router-ext"
   ],
   "httpIdleTimeoutMs": 120000
 }

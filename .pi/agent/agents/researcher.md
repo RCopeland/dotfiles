@@ -2,7 +2,6 @@
 name: researcher
 description: External knowledge research agent - finds facts, compares options, and reports current best practices with sources. Use when a decision depends on knowledge outside the codebase (library capabilities, API behavior, standards, tradeoffs). Spawnable by the planner when it hits a factual gap.
 tools: read, bash, write, web_search, fetch_content, source_check, get_search_content
-thinking: medium
 spawning: false
 auto-exit: true
 output: research.md

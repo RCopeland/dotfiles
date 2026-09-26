@@ -25,10 +25,7 @@
       ]
     },
     "npm:pi-mcp-adapter",
-    "git:github.com/aporcelli/pi-usage",
-    "npm:pi-herdr-subagents",
-    "npm:pi-bansos",
-    "npm:pi-9router-ext"
+    "git:github.com/aporcelli/pi-usage"
   ],
   "httpIdleTimeoutMs": 120000
 }

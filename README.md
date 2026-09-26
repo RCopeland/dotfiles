@@ -9,7 +9,7 @@ Personal dotfiles managed with [yadm](https://yadm.io), combining a shared core 
 - `~/.config/herdr/` — Herdr config
 - `~/.config/yadm/` — bootstrap, package manifests, KDE snippets
 - `~/.local/share/kwin/scripts/toggleterminal/` — KWin toggle-terminal script
-- `~/.pi/agent/` — Pi settings, MCP config, extensions, themes, selected skills
+- `~/.pi/agent/` — Pi settings, MCP config, extensions, and themes. (Agents, skills, and global `AGENTS.md` live in the separate [ai-docs](https://github.com/RCopeland/ai-docs) repo.)
 - `~/.zshrc` and `~/.config/zsh/cachyos-config.zsh`
 
 ## Bootstrap

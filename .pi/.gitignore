@@ -6,14 +6,13 @@
 !.gitignore
 
 # --- TRACK THESE ---
+# NOTE: agents/, skills/, and AGENTS.md are owned by the ai-docs repo
+# (https://github.com/RCopeland/ai-docs). This repo no longer ships them.
 !agent/settings.json
 !agent/mcp.json
 !agent/extensions/**
-!agent/skills/**
 !agent/themes/**
 !agent/npm/.gitignore
-!agent/agents/**
-!agent/AGENTS.md
 !agent/
 
 # --- EXCLUDE THESE ---
